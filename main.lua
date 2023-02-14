@@ -38,7 +38,6 @@ require 'states/CountdownState'
 require 'states/PlayState'
 require 'states/ScoreState'
 require 'states/TitleScreenState'
-require 'states/PauseState'
 
 require 'Bird'
 require 'Pipe'
@@ -63,6 +62,9 @@ local GROUND_SCROLL_SPEED = 60
 
 local BACKGROUND_LOOPING_POINT = 413
 
+local scrolling = true
+local pause = false
+
 function love.load()
     -- initialize our nearest-neighbor filter
     love.graphics.setDefaultFilter('nearest', 'nearest')
@@ -78,10 +80,12 @@ function love.load()
     mediumFont = love.graphics.newFont('flappy.ttf', 14)
     flappyFont = love.graphics.newFont('flappy.ttf', 28)
     hugeFont = love.graphics.newFont('flappy.ttf', 56)
+    pauseFont = love.graphics.newFont('flappy.ttf', 84)
     love.graphics.setFont(flappyFont)
 
     -- initialize our table of sounds
     sounds = {
+        ['pause'] = love.audio.newSource('pause.wav', 'static'),
         ['jump'] = love.audio.newSource('jump.wav', 'static'),
         ['explosion'] = love.audio.newSource('explosion.wav', 'static'),
         ['hurt'] = love.audio.newSource('hurt.wav', 'static'),
@@ -92,9 +96,8 @@ function love.load()
     }
 
     -- kick off music
-    -- Set to play
     sounds['music']:setLooping(true)
-    sounds['music']:pause()
+    sounds['music']:play()
 
     -- initialize our virtual resolution
     push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
@@ -108,7 +111,6 @@ function love.load()
         ['title'] = function() return TitleScreenState() end,
         ['countdown'] = function() return CountdownState() end,
         ['play'] = function() return PlayState() end,
-        ['pause'] = function() return PauseState() end,
         ['score'] = function() return ScoreState() end
     }
     gStateMachine:change('title')
@@ -130,6 +132,19 @@ function love.keypressed(key)
 
     if key == 'escape' then
         love.event.quit()
+    end
+
+    if key == 'backspace' then
+        -- Pause game
+        if not pause then
+            love.audio.pause()
+            sounds['pause']:play()
+            pause = true
+        -- Resume game
+        else
+            sounds['music']:play()
+            pause = false
+        end
     end
 end
 
@@ -157,14 +172,17 @@ function love.mouse.wasPressed(button)
 end
 
 function love.update(dt)
-    -- scroll our background and ground, looping back to 0 after a certain amount
-    backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
-    groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
+    -- Pause game if pause is true
+    if not pause then
+        -- scroll our background and ground, looping back to 0 after a certain amount
+        backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
+        groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
 
-    gStateMachine:update(dt)
+        gStateMachine:update(dt)
 
-    love.keyboard.keysPressed = {}
-    love.mouse.buttonsPressed = {}
+        love.keyboard.keysPressed = {}
+        love.mouse.buttonsPressed = {}
+    end
 end
 
 function love.draw()
@@ -174,5 +192,10 @@ function love.draw()
     gStateMachine:render()
     love.graphics.draw(ground, -groundScroll, VIRTUAL_HEIGHT - 16)
 
+    -- pause font
+    if pause then
+        love.graphics.setFont(pauseFont)
+        love.graphics.printf("II", 0, VIRTUAL_HEIGHT / 2 - 50, VIRTUAL_WIDTH, 'center')
+    end
     push:finish()
 end

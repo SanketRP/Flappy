@@ -32,7 +32,7 @@ function PlayState:update(dt)
     self.timer = self.timer + dt
 
     -- spawn a new pipe pair every second and a half
-    if self.timer > 2 then
+    if self.timer > (math.random(2, 4) * 0.375 + 1.3) then
         -- modify the last Y coordinate we placed so pipe gaps aren't too far apart
         -- no higher than 10 pixels below the top edge of the screen,
         -- and no lower than a gap length (90 pixels) from the bottom
@@ -90,8 +90,6 @@ function PlayState:update(dt)
     -- update bird based on gravity and input
     self.bird:update(dt)
 
-    -- pause
-
     -- reset if we get to the ground
     if self.bird.y > VIRTUAL_HEIGHT - 15 or self.bird.y < 0 then
         sounds['explosion']:play()
@@ -111,6 +109,9 @@ function PlayState:render()
     love.graphics.setFont(flappyFont)
     love.graphics.print('Score: ' .. tostring(self.score), 8, 8)
 
+    love.graphics.setFont(smallFont)
+    love.graphics.print('Press Backspace to Pause', VIRTUAL_WIDTH-120, 8)
+
     self.bird:render()
 end
 
@@ -125,12 +126,6 @@ end
 --[[
     Called when this state changes to another state.
 ]]
-
-function PlayState:pause()
-    -- stop scrolling for the pause screen
-    scrolling = false
-end
-
 function PlayState:exit()
     -- stop scrolling for the death/score screen
     scrolling = false
