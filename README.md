@@ -8,6 +8,8 @@
 
 - 📽️ Click on the image to watch a demo
 
+- 🎮 Want to downlaod the game [click here](https://github.com/SanketRP/Flappy/releases/tag/v1.0) to download the game file
+
 <br/>
 
 [![PONG](https://img.youtube.com/vi/3fpu5z_c5wU/0.jpg)](https://www.youtube.com/watch?v=3fpu5z_c5wU)
